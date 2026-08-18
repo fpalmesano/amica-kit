@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  AMICA - Kit consulente · Simulatore fiscale
+  ----------------------------------------------------------------------------
+  AMBITO: CLIENTE (§8.1 design system AMICADesignSystem_be2d1b).
+  Palette, tipografia, spaziatura, forme e componenti dai token canonici.
+  Estensione dichiarata: --x-pw-* per le motorizzazioni (lacuna §9.4).
+
+  FONTE NORMATIVA (verificata il 18 agosto 2026):
+    art. 164 TUIR                     deducibilita' imposte dirette
+    art. 19-bis1 lett. c DPR 633/72   detraibilita' IVA
+    art. 51 c.4 lett. a TUIR          fringe benefit uso promiscuo
+    L. 207/2024                       percentuali 10/20/50 per alimentazione
+    D.Lgs. 148/2026 (Omnibus)         GU 11/08/2026, in vigore dal 12/08/2026:
+                                      +50% oltre 5 anni, +5% optional
+    Provv. AdE 184192 del 06/12/2006  falso autocarro
+
+  MODULO NUOVA SABATINI: contributo in conto impianti su finanziamento o
+  leasing. Attenzione, la FAQ 6.3 MIMIT rinvia allo STESSO provvedimento AdE
+  del 6 dicembre 2006 usato per il falso autocarro: un solo test tecnico
+  decide sia la deducibilita' al 100% sia l'accesso al contributo.
+  Km0 esclusi, mera sostituzione esclusa, domanda obbligatoriamente
+  precedente alla conferma d'ordine.
+
+  MODULO PATRIMONIALE: confronta anche cosa resta in mano al cliente a fine
+  periodo. Attenzione, con i principi OIC il leasing NON iscrive il bene
+  nell'attivo durante il contratto (metodo patrimoniale, art. 2427 n.22 c.c.):
+  il bene entra solo al riscatto e al prezzo di riscatto. Il vantaggio del
+  leasing e' l'opzione, non la patrimonializzazione. Con IFRS 16 leasing e
+  noleggio finiscono entrambi a bilancio come diritto d'uso.
+
+  QUESTO STRUMENTO NON E' UNA CONSULENZA FISCALE. AMICA e' una concessionaria,
+  non un intermediario fiscale. Il calcolo e' un ordine di grandezza per
+  orientare la scelta: la posizione va sempre confermata dal commercialista
+  del cliente. Il disclaimer e' in pagina e non va rimosso.
+  ============================================================================
+-->
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AMICA &middot; Simulatore fiscale per il consulente</title>
+<script src="parametri.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:"Montserrat";src:url("assets/fonts/montserrat-variable-latin.woff2") format("woff2-variations");font-weight:400 900;font-style:normal;font-display:swap;}
+:root{
+  --amica-black:#000000; --amica-white:#FFFFFF; --amica-red:#EB0000; --amica-red-deep:#A90000;
+  --gray-50:#F7F7F7; --gray-100:#EFEFEF; --gray-200:#E2E2E2; --gray-300:#C9C9C9;
+  --gray-400:#A3A3A3; --gray-500:#7A7A7A; --gray-600:#555555; --gray-700:#3A3A3A;
+  --gray-800:#222222; --gray-900:#111111;
+  --surface-page:var(--amica-white); --surface-subtle:var(--gray-50); --surface-card:var(--amica-white);
+  --surface-inverse:var(--amica-black); --surface-brand:var(--amica-red);
+  --text-primary:var(--amica-black); --text-secondary:var(--gray-600); --text-muted:var(--gray-400);
+  --text-inverse:var(--amica-white); --text-brand:var(--amica-red); --text-on-brand:var(--amica-white);
+  --border-subtle:var(--gray-200); --border-strong:var(--amica-black);
+  --interactive-primary:var(--amica-red); --focus-ring:rgba(235,0,0,0.35);
+  --font-sans:"Montserrat","Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --weight-regular:400; --weight-medium:500; --weight-semibold:600; --weight-bold:700;
+  --weight-extrabold:800; --weight-black:900;
+  --size-xs:12px; --size-sm:14px; --size-md:16px; --size-lg:18px; --size-xl:22px;
+  --size-2xl:28px; --size-3xl:36px; --size-4xl:48px; --size-5xl:64px;
+  --tracking-tight:-0.01em; --tracking-normal:0; --tracking-label:0.08em; --tracking-wide:0.25em;
+  --leading-tight:1.1; --leading-snug:1.25; --leading-normal:1.5;
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:24px;
+  --space-6:32px; --space-7:48px; --space-8:64px; --space-9:96px;
+  --radius-sm:4px; --radius-md:8px; --radius-lg:12px; --radius-pill:999px;
+  --shadow-card:0 2px 8px rgba(0,0,0,0.10); --shadow-card-hover:0 6px 20px rgba(0,0,0,0.16);
+  --ease-standard:cubic-bezier(0.2,0,0,1); --duration-fast:120ms; --duration-base:200ms;
+  --x-container-max:1200px; --x-focus-shadow:0 0 0 2px var(--focus-ring);
+  /* estensione fuori sistema, lacuna §9.4 */
+  --x-pw-bev:#0E7C86; --x-pw-phev:#1D5FA8; --x-pw-benz:#1A1A1A;
+}
+*{box-sizing:border-box;} html,body{margin:0;padding:0;}
+body{background:var(--surface-page);color:var(--text-primary);font-family:var(--font-sans);
+  font-size:var(--size-md);line-height:var(--leading-normal);-webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;}
+.wrap{max-width:var(--x-container-max);margin:0 auto;padding:0 var(--space-5) var(--space-8);}
+@media(max-width:768px){.wrap{padding:0 var(--space-4) var(--space-7);}}
+:focus-visible{outline:none;box-shadow:var(--x-focus-shadow);}
+
+.masthead{background:var(--surface-inverse);color:var(--text-inverse);}
+.masthead .in{max-width:var(--x-container-max);margin:0 auto;padding:0 var(--space-5);display:flex;align-items:center;gap:var(--space-5);min-height:72px;}
+@media(max-width:768px){.masthead .in{padding:0 var(--space-4);}}
+.markwrap{display:flex;align-items:center;padding:var(--space-3) 0;text-decoration:none;}
+.logo-amica{height:48px;width:auto;display:block;}
+@media(max-width:768px){.logo-amica{height:36px;}}
+.masthead .claim{font-size:var(--size-xs);font-weight:var(--weight-semibold);letter-spacing:var(--tracking-label);text-transform:uppercase;color:var(--gray-400);}
+@media(max-width:768px){.masthead .claim{display:none;}}
+.masthead a.back{margin-left:auto;font-size:var(--size-xs);font-weight:var(--weight-bold);letter-spacing:var(--tracking-label);text-transform:uppercase;color:var(--amica-white);text-decoration:none;border-bottom:2px solid var(--amica-red);}
+
+.hero{padding:var(--space-7) 0 var(--space-5);}
+.kicker{font-size:var(--size-xs);font-weight:var(--weight-bold);letter-spacing:var(--tracking-wide);text-transform:uppercase;color:var(--text-secondary);margin:0 0 var(--space-3);}
+h1{font-size:var(--size-4xl);line-height:var(--leading-tight);font-weight:var(--weight-extrabold);text-transform:uppercase;margin:0 0 var(--space-4);}
+@media(max-width:768px){h1{font-size:var(--size-2xl);}}
+h1 em{font-style:normal;color:var(--text-brand);}
+.lead{margin:0 0 var(--space-5);color:var(--text-secondary);font-size:var(--size-md);max-width:60ch;}
+
+.sect{margin:var(--space-7) 0 var(--space-4);}
+.sect h2{font-size:var(--size-xl);font-weight:var(--weight-bold);letter-spacing:var(--tracking-label);text-transform:uppercase;margin:0;}
+.sect .rule{width:56px;height:3px;background:var(--amica-red);margin:10px 0 0;}
+
+.form{display:grid;grid-template-columns:1fr;gap:var(--space-4);}
+@media(min-width:768px){.form{grid-template-columns:repeat(2,1fr);}}
+@media(min-width:1024px){.form{grid-template-columns:repeat(3,1fr);}}
+.fld{display:flex;flex-direction:column;}
+.fld > label{font-size:var(--size-xs);font-weight:var(--weight-bold);letter-spacing:var(--tracking-label);text-transform:uppercase;color:var(--text-primary);margin-bottom:var(--space-2);}
+.fld .hint{font-size:11px;color:var(--text-secondary);margin-top:var(--space-1);line-height:var(--leading-snug);}
+select,input[type=number]{
+  font:inherit;font-size:var(--size-sm);font-weight:var(--weight-semibold);width:100%;
+  padding:12px 16px;border:1px solid var(--border-subtle);border-radius:var(--radius-md);
+  background:var(--surface-card);color:var(--text-primary);
+  transition:border-color var(--duration-fast) var(--ease-standard);
+}
+select:hover,input:hover{border-color:var(--gray-400);}
+select:focus,input:focus{outline:none;border-color:var(--amica-red);box-shadow:var(--x-focus-shadow);}
+.seg{display:flex;flex-wrap:wrap;gap:var(--space-2);}
+.seg button{font:inherit;font-size:13px;font-weight:var(--weight-semibold);background:var(--surface-card);
+  border:1px solid var(--border-subtle);color:var(--text-primary);padding:6px 14px;border-radius:var(--radius-pill);cursor:pointer;
+  transition:border-color var(--duration-fast) var(--ease-standard),background var(--duration-fast) var(--ease-standard);}
+.seg button:hover{border-color:var(--gray-400);}
+.seg button[aria-pressed="true"]{background:var(--amica-black);border-color:var(--amica-black);color:var(--text-inverse);}
+
+.card{background:var(--surface-card);border-radius:var(--radius-md);box-shadow:var(--shadow-card);overflow:hidden;margin-top:var(--space-5);}
+.chead{padding:var(--space-5);border-bottom:1px solid var(--border-subtle);}
+.chead .kb{font-size:var(--size-xs);font-weight:var(--weight-bold);letter-spacing:var(--tracking-label);text-transform:uppercase;color:var(--text-brand);margin-bottom:var(--space-1);}
+.chead .t{font-size:var(--size-xl);font-weight:var(--weight-extrabold);line-height:var(--leading-snug);}
+.chead .s{font-size:13px;color:var(--text-secondary);margin-top:var(--space-2);font-weight:var(--weight-semibold);}
+
+.kpis{display:grid;grid-template-columns:1fr;}
+@media(min-width:600px){.kpis{grid-template-columns:repeat(3,1fr);}}
+.kpi{padding:var(--space-5);border-bottom:1px solid var(--border-subtle);}
+@media(min-width:600px){.kpi{border-bottom:0;border-right:1px solid var(--border-subtle);} .kpi:last-child{border-right:0;}}
+.kpi .lb{font-size:var(--size-xs);font-weight:var(--weight-bold);letter-spacing:var(--tracking-label);text-transform:uppercase;color:var(--text-secondary);}
+.kpi .vl{font-size:var(--size-2xl);font-weight:var(--weight-extrabold);line-height:var(--leading-tight);margin-top:var(--space-2);}
+.kpi .nt{font-size:12px;color:var(--text-secondary);margin-top:var(--space-2);font-weight:var(--weight-medium);}
+
+table{width:100%;border-collapse:separate;border-spacing:0;}
+.tscroll{overflow-x:auto;}
+th,td{padding:var(--space-3) var(--space-4);text-align:right;font-size:13px;border-bottom:1px solid var(--border-subtle);white-space:nowrap;}
+th:first-child,td:first-child{text-align:left;}
+thead th{font-size:var(--size-xs);font-weight:var(--weight-bold);letter-spacing:var(--tracking-label);text-transform:uppercase;color:var(--text-secondary);background:var(--surface-subtle);}
+tbody td{font-weight:var(--weight-semibold);}
+tbody tr.tot td{font-weight:var(--weight-extrabold);font-size:var(--size-md);background:var(--surface-subtle);}
+td.best{position:relative;}
+.pill{display:inline-block;font-size:var(--size-xs);font-weight:var(--weight-bold);padding:3px 8px;border-radius:var(--radius-sm);background:var(--amica-red);color:var(--text-on-brand);}
+.pill.n{background:var(--gray-100);color:var(--gray-700);}
+
+.verdict{padding:var(--space-5);background:var(--surface-brand);color:var(--text-on-brand);}
+.verdict b{display:block;font-size:var(--size-xl);font-weight:var(--weight-extrabold);line-height:var(--leading-snug);}
+@media(max-width:768px){.verdict b{font-size:var(--size-lg);}}
+.verdict span{display:block;font-size:13px;margin-top:var(--space-2);font-weight:var(--weight-medium);}
+
+.notes{padding:var(--space-4) var(--space-5);background:var(--surface-subtle);border-top:1px solid var(--border-subtle);}
+.notes .h{font-size:var(--size-xs);font-weight:var(--weight-bold);letter-spacing:var(--tracking-label);text-transform:uppercase;margin-bottom:var(--space-2);}
+.notes ul{margin:0;padding-left:var(--space-4);}
+.notes li{font-size:var(--size-xs);color:var(--text-secondary);line-height:var(--leading-normal);margin-bottom:var(--space-2);}
+.notes li b{color:var(--text-primary);}
+
+.alert{padding:var(--space-4) var(--space-5);border-top:1px solid var(--border-subtle);background:var(--surface-card);border-left:4px solid var(--amica-red);}
+.alert .h{font-size:var(--size-xs);font-weight:var(--weight-bold);letter-spacing:var(--tracking-label);text-transform:uppercase;color:var(--amica-red);margin-bottom:var(--space-2);}
+.alert p{margin:0;font-size:13px;color:var(--text-primary);line-height:var(--leading-normal);}
+
+.disclaimer{background:var(--surface-inverse);color:var(--text-inverse);padding:var(--space-5);border-radius:var(--radius-md);margin-top:var(--space-6);}
+.disclaimer .h{font-size:var(--size-xs);font-weight:var(--weight-bold);letter-spacing:var(--tracking-wide);text-transform:uppercase;color:var(--amica-red);margin-bottom:var(--space-3);}
+.disclaimer p{margin:0 0 var(--space-3);font-size:13px;color:var(--gray-300);line-height:var(--leading-normal);}
+.disclaimer p:last-child{margin-bottom:0;}
+.disclaimer b{color:var(--amica-white);font-weight:var(--weight-bold);}
+
+.foot{margin-top:var(--space-6);font-size:11px;color:var(--text-secondary);line-height:var(--leading-normal);}
+.foot h2{font-size:var(--size-xs);font-weight:var(--weight-bold);letter-spacing:var(--tracking-label);text-transform:uppercase;color:var(--text-primary);margin:0 0 var(--space-2);}
+.foot ul{margin:0;padding-left:var(--space-4);} .foot li{margin-bottom:var(--space-2);}
+.hidden{display:none;}
+details.pan{background:var(--surface-card);border-radius:var(--radius-md);box-shadow:var(--shadow-card);margin-top:var(--space-3);overflow:hidden;}
+details.pan > summary{
+  list-style:none;cursor:pointer;padding:var(--space-4) var(--space-5);
+  display:flex;align-items:center;gap:var(--space-4);flex-wrap:wrap;
+}
+details.pan > summary::-webkit-details-marker{display:none;}
+details.pan > summary::before{
+  content:"+";font-weight:var(--weight-extrabold);font-size:var(--size-lg);color:var(--amica-red);
+  width:20px;text-align:center;flex:none;
+}
+details.pan[open] > summary::before{content:"\2212";}
+details.pan > summary .ttl{font-size:var(--size-sm);font-weight:var(--weight-extrabold);letter-spacing:var(--tracking-label);text-transform:uppercase;}
+details.pan > summary .sm{font-size:var(--size-xs);color:var(--text-secondary);font-weight:var(--weight-semibold);margin-left:auto;text-align:right;}
+@media(max-width:768px){details.pan > summary .sm{margin-left:0;width:100%;text-align:left;padding-left:calc(20px + var(--space-4));}}
+details.pan > summary:focus-visible{box-shadow:var(--x-focus-shadow);}
+details.pan .body{padding:0 var(--space-5) var(--space-5);border-top:1px solid var(--border-subtle);padding-top:var(--space-5);}
+.stima{font-size:11px;font-weight:var(--weight-bold);color:var(--amica-red);text-transform:uppercase;letter-spacing:var(--tracking-label);}
+.reset{font:inherit;font-size:var(--size-xs);font-weight:var(--weight-bold);letter-spacing:var(--tracking-label);text-transform:uppercase;
+  background:transparent;border:1px solid var(--border-subtle);border-radius:var(--radius-pill);padding:6px 14px;cursor:pointer;color:var(--text-primary);}
+.reset:hover{border-color:var(--gray-400);}
+.essenziali{background:var(--surface-subtle);border-radius:var(--radius-md);padding:var(--space-5);}
+@media print{.form,.masthead a.back{display:none !important;} .card{box-shadow:none;border:1px solid var(--gray-400);}}
+@media (prefers-reduced-motion:reduce){*{transition:none !important;}}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="in">
+    <a class="markwrap" href="index.html"><img class="logo-amica" id="amicaLogo" alt="AMICA Gruppo Palmesano"></a>
+    <span class="claim">Kit consulente &middot; Simulatore fiscale</span>
+    <a class="back" href="index.html">Torna al kit</a>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="hero">
+    <p class="kicker">Uso interno &middot; ordini di grandezza, non parere fiscale</p>
+    <h1>Qual &egrave; la forma<br><em>fiscalmente pi&ugrave; efficiente</em></h1>
+    <p class="lead">Imposta il profilo del cliente, il veicolo e le condizioni economiche.
+       Lo strumento confronta acquisto, finanziamento, leasing e noleggio e mostra il costo netto
+       dopo il recupero fiscale, con il riferimento normativo di ogni percentuale applicata.</p>
+  </div>
+
+  <div class="sect"><h2>I sei dati che servono</h2><div class="rule"></div></div>
+  <div class="essenziali">
+    <div class="form">
+      <div class="fld">
+        <label for="cli">Chi &egrave; il cliente</label>
+        <select id="cli">
+          <option value="privato">Privato senza partita IVA</option>
+          <option value="prof" selected>Professionista o lavoratore autonomo</option>
+          <option value="forfe">Professionista in regime forfettario</option>
+          <option value="impresa">Impresa o societ&agrave;</option>
+          <option value="ditta">Ditta individuale o artigiano</option>
+          <option value="agente">Agente o rappresentante di commercio</option>
+          <option value="strum">Taxi, NCC, autoscuola, autonoleggio</option>
+        </select>
+        <span class="hint" id="hCli"></span>
+      </div>
+      <div class="fld">
+        <label for="uso">Come user&agrave; il veicolo</label>
+        <select id="uso">
+          <option value="promiscuo" selected>Un po' per lavoro, un po' privato</option>
+          <option value="dipendente">Lo assegna a un dipendente tutto l'anno</option>
+          <option value="esclusivo">Solo per l'attivit&agrave;, mai privato</option>
+        </select>
+        <span class="hint" id="hUso"></span>
+      </div>
+      <div class="fld">
+        <label for="aliq">Come &egrave; tassato</label>
+        <select id="aliq">
+          <option value="0.279">Societ&agrave; di capitali &middot; 27,9%</option>
+          <option value="0.23">Redditi fino a 28.000 &euro; &middot; 23%</option>
+          <option value="0.35" selected>Redditi fino a 50.000 &euro; &middot; 35%</option>
+          <option value="0.43">Redditi oltre 50.000 &euro; &middot; 43%</option>
+        </select>
+        <span class="hint">Quanto vale in euro ogni euro dedotto.</span>
+      </div>
+      <div class="fld">
+        <label for="cat">Omologazione</label>
+        <select id="cat">
+          <option value="m1" selected>Autovettura M1</option>
+          <option value="n1">Autocarro N1</option>
+        </select>
+        <span class="hint" id="hCat"></span>
+      </div>
+      <div class="fld">
+        <label for="prezzo">Prezzo IVA esclusa (&euro;)</label>
+        <input type="number" id="prezzo" min="0" step="500" value="30000">
+        <span class="hint">Imponibile di fattura, al netto degli incentivi.</span>
+      </div>
+      <div class="fld">
+        <label for="durata">Per quanti mesi</label>
+        <select id="durata">
+          <option value="24">24 mesi</option>
+          <option value="36">36 mesi</option>
+          <option value="48" selected>48 mesi</option>
+          <option value="60">60 mesi</option>
+        </select>
+        <span class="hint" id="hDur"></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="boxN1" class="card hidden">
+    <div class="chead">
+      <div class="kb">Verifica obbligatoria</div>
+      <div class="t">&Egrave; un autocarro vero?</div>
+      <div class="s">Provvedimento Agenzia Entrate 184192 del 6 dicembre 2006. Decide sia la deducibilit&agrave; sia l'accesso alla Nuova Sabatini. I dati sono sulla carta di circolazione.</div>
+    </div>
+    <div style="padding:var(--space-5)">
+      <div class="form">
+        <div class="fld">
+          <label for="quattro">Ha carrozzeria F0 e almeno 4 posti a sedere?</label>
+          <select id="quattro">
+            <option value="no" selected>No, meno di 4 posti oppure carrozzeria diversa da F0</option>
+            <option value="si">S&igrave;, entrambe le cose</option>
+          </select>
+          <span class="hint">Se anche una sola manca, il veicolo &egrave; autocarro a ogni effetto e non serve altro.</span>
+        </div>
+      </div>
+      <div id="testEsteso" class="form hidden" style="margin-top:var(--space-4)">
+        <div class="fld"><label for="kw">Potenza (kW)</label><input type="number" id="kw" min="0" step="1" value="96"></div>
+        <div class="fld"><label for="mc">Massa complessiva (kg)</label><input type="number" id="mc" min="0" step="10" value="2100"></div>
+        <div class="fld"><label for="tara">Tara (kg)</label><input type="number" id="tara" min="0" step="10" value="1500"></div>
+      </div>
+    </div>
+    <div id="esitoN1"></div>
+  </div>
+
+  <details class="pan" id="panEco">
+    <summary><span class="ttl">Condizioni economiche</span><span class="sm" id="smEco"></span></summary>
+    <div class="body">
+      <p style="font-size:13px;color:var(--text-secondary);margin:0 0 var(--space-4);max-width:74ch">
+        I canoni sono <b>stimati dal prezzo e dalla durata</b>. Un valore inserito manualmente sostituisce la stima: il campo si blocca e smette di ricalcolarsi.</p>
+      <div class="form">
+        <div class="fld"><label for="tan">TAN di riferimento (%)</label><input type="number" id="tan" min="0" max="20" step="0.1" value="6.9" data-def="tan">
+          <span class="hint">Usato per stimare interessi e canone leasing.</span></div>
+        <div class="fld"><label for="anticipo">Anticipo, acconto o permuta (&euro;)</label><input type="number" id="anticipo" min="0" step="500" value="0">
+          <span class="hint">Riduce il capitale finanziato e i canoni. Sul leasing e sul noleggio &egrave; il maxicanone: fiscalmente si ripartisce sulla durata.</span></div>
+        <div class="fld"><label for="interessi">Interessi totali del finanziamento (&euro;) <span class="stima" id="stI">stimati</span></label><input type="number" id="interessi" min="0" step="50">
+          <span class="hint">Montante interessi del preventivo, dove disponibile: tasso promozionale, maxirata finale o spese incluse.</span></div>
+        <div class="fld"><label for="canoneL">Canone leasing mensile (&euro;) <span class="stima" id="stL">stimato</span></label><input type="number" id="canoneL" min="0" step="10"></div>
+        <div class="fld"><label for="canoneN">Canone noleggio mensile (&euro;) <span class="stima" id="stN">stimato</span></label><input type="number" id="canoneN" min="0" step="10"></div>
+        <div class="fld"><label for="quotaServ">Quota servizi nel noleggio (%)</label><input type="number" id="quotaServ" min="0" max="80" step="5" value="30">
+          <span class="hint">Va separata in fattura: non ha tetto in euro.</span></div>
+        <div class="fld"><label for="gestione">Spese di gestione annue (&euro;) <span class="stima" id="stG">stimate</span></label><input type="number" id="gestione" min="0" step="100"></div>
+        <div class="fld" style="justify-content:flex-end"><button class="reset" id="btnReset" type="button">Torna alle stime</button></div>
+      </div>
+    </div>
+  </details>
+
+  <details class="pan" id="panSab">
+    <summary><span class="ttl">Nuova Sabatini</span><span class="sm" id="smSab"></span></summary>
+    <div class="body">
+      <div class="form">
+        <div class="fld"><label for="dim">Dimensione dell'impresa</label>
+          <select id="dim"><option value="micro" selected>Micro o piccola</option><option value="media">Media</option><option value="grande">Grande</option></select>
+          <span class="hint">Intensit&agrave; massima 20% piccole, 10% medie.</span></div>
+        <div class="fld"><label for="linea">Linea di intervento</label>
+          <select id="linea"><option value="ord" selected>Ordinaria &middot; 2,75%</option><option value="green">Green &middot; 3,575%</option><option value="quattro">4.0 &middot; 3,575%</option></select>
+          <span class="hint" id="hLinea"></span></div>
+        <div class="fld"><label for="immatr">Veicolo gi&agrave; immatricolato (km0, demo, import)</label>
+          <select id="immatr"><option value="no" selected>No</option><option value="si">S&igrave;</option></select></div>
+        <div class="fld"><label for="sost">Sostituisce un mezzo gi&agrave; in flotta</label>
+          <select id="sost"><option value="no" selected>No</option><option value="si">S&igrave;</option></select></div>
+        <div class="fld"><label for="ordine">Ordine gi&agrave; confermato o acconto versato</label>
+          <select id="ordine"><option value="no" selected>No</option><option value="si">S&igrave;</option></select></div>
+      </div>
+    </div>
+  </details>
+
+  <details class="pan" id="panFin">
+    <summary><span class="ttl">Che cosa resta alla fine</span><span class="sm" id="smFin"></span></summary>
+    <div class="body">
+      <div class="form">
+        <div class="fld"><label for="residuo">Valore di mercato a fine periodo (%) <span class="stima" id="stR">stimato</span></label>
+          <input type="number" id="residuo" min="0" max="90" step="1">
+          <span class="hint" id="hRes"></span></div>
+        <div class="fld"><label for="riscatto">Riscatto del leasing (%)</label><input type="number" id="riscatto" min="0" max="50" step="1" value="15"></div>
+        <div class="fld"><label for="principi">Principi contabili</label>
+          <select id="principi"><option value="oic" selected>OIC &middot; codice civile</option><option value="ifrs">IFRS 16</option></select>
+          <span class="hint" id="hPrin"></span></div>
+      </div>
+    </div>
+  </details>
+
+  <details class="pan hidden" id="boxFB">
+    <summary><span class="ttl">Fringe benefit del dipendente</span><span class="sm" id="smFB"></span></summary>
+    <div class="body">
+      <div class="form">
+        <div class="fld"><label for="alim">Alimentazione</label>
+          <select id="alim"><option value="bev">Elettrica</option><option value="phev">Plug-in Hybrid</option><option value="altro" selected>Benzina, diesel, mild o full hybrid</option></select>
+          <span class="hint">Decide la percentuale: 10%, 20% o 50%.</span></div>
+        <div class="fld"><label for="aci">Costo chilometrico ACI (&euro;/km)</label><input type="number" id="aci" min="0" step="0.01" value="0.52">
+          <span class="hint">Tabelle ACI 2026, GU n. 297 del 23 dicembre 2025.</span></div>
+        <div class="fld"><label for="eta">Et&agrave; del veicolo</label>
+          <select id="eta"><option value="no" selected>Entro 5 anni</option><option value="si">Oltre 5 anni</option></select>
+          <span class="hint">Oltre i 5 anni il valore imponibile sale del 50%.</span></div>
+        <div class="fld"><label for="optional">Optional aziendali fuori tabella ACI</label>
+          <select id="optional"><option value="no" selected>No</option><option value="si">S&igrave;, maggiorazione 5%</option></select></div>
+        <div class="fld"><label for="trattenuta">Trattenuta mensile al dipendente (&euro;)</label><input type="number" id="trattenuta" min="0" step="10" value="0"></div>
+        <div class="fld"><label for="aliqDip">Aliquota IRPEF del dipendente</label>
+          <select id="aliqDip"><option value="0.23" selected>23%</option><option value="0.35">35%</option><option value="0.43">43%</option></select></div>
+      </div>
+      <div id="outFB"></div>
+    </div>
+  </details>
+
+  <div class="sect"><h2>Inquadramento e confronto</h2><div class="rule"></div></div>
+  <div id="out"></div>
+
+  <div class="disclaimer">
+    <div class="h">Perimetro dello strumento</div>
+    <p><b>Questo non &egrave; un parere fiscale e AMICA non &egrave; un intermediario fiscale.</b> Lo strumento produce un ordine di grandezza. La posizione del singolo cliente dipende da reddito, regime contabile, ROL, pro-rata IVA, presenza di altri veicoli e da circostanze che il simulatore non conosce: resta di competenza del suo commercialista.</p>
+    <p>I valori prodotti non hanno natura di calcolo definitivo e il documento non &egrave; predisposto per essere consegnato come parere su carta intestata.</p>
+    <p>La materia cambia di continuo: il D.Lgs. 148/2026 era in vigore da sei giorni al momento di questa versione. I parametri sono aggiornati al 18 agosto 2026 e vanno riallineati a ogni legge di bilancio.</p>
+  </div>
+
+  <div class="foot">
+    <h2>Riferimenti normativi usati nel calcolo</h2>
+    <ul>
+      <li><b>Art. 164 TUIR</b> &mdash; deducibilit&agrave;: 100% strumentale, 70% uso promiscuo al dipendente per almeno 183 giorni, 80% agenti con tetto 25.822,84 &euro;, 20% residuale con tetto 18.075,99 &euro;. Noleggio: tetto annuo 3.615,20 &euro; (5.164,57 &euro; agenti) sulla sola quota di locazione. Ammortamento 25%, primo anno 12,5%. Leasing: durata minima 48 mesi per le auto.</li>
+      <li><b>Art. 19-bis1 lett. c DPR 633/72</b> &mdash; IVA detraibile 40% in uso promiscuo, 100% per uso esclusivamente strumentale, agenti e autocarri genuini. L'IVA non detratta si somma al costo e diventa a sua volta deducibile.</li>
+      <li><b>Art. 51 c.4 lett. a TUIR</b>, come modificato da <b>L. 207/2024</b> e <b>D.Lgs. 148/2026</b> &mdash; fringe benefit: costo chilometrico ACI per 15.000 km, 10% BEV, 20% PHEV, 50% altre. Maggiorazione del 50% oltre i 5 anni dalla prima immatricolazione, 5% per optional non in tabella ACI. Soglie di esenzione complessiva 1.000 &euro;, 2.000 &euro; con figli a carico.</li>
+      <li><b>Provvedimento AdE 184192 del 6 dicembre 2006</b> &mdash; falso autocarro: assimilazione ad autovettura solo se ricorrono tutte e quattro le condizioni (N1, carrozzeria F0, almeno 4 posti, rapporto kW/portata maggiore o uguale a 180).</li>
+      <li>Il <b>regime forfettario</b> non consente deduzione analitica n&eacute; detrazione IVA: i costi sono gi&agrave; compresi nel coefficiente di redditivit&agrave;.</li>
+      <li>Parametri verificati il <b>18 agosto 2026</b>.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+"use strict";
+var LOGO_W = "data:image/png;base64,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";
+document.getElementById("amicaLogo").src = LOGO_W;
+
+
+/* ---- parametri centralizzati: parametri.js e' l'unico file da aggiornare ---- */
+var CFG = (typeof AMICA_PARAMETRI !== "undefined") ? AMICA_PARAMETRI : null;
+function piedeVersione(){
+  var t = CFG
+    ? "Kit consulente AMICA &middot; parametri versione "+CFG.VERSIONE+" &middot; aggiornati il "+CFG.AGGIORNATO
+      + (CFG.NOTA ? " &middot; "+CFG.NOTA : "")
+    : "<b>Parametri non caricati</b>: la pagina sta usando i valori interni di ripiego. Verificare che parametri.js sia presente accanto al file.";
+  var d = document.createElement("div");
+  d.style.cssText = "max-width:1200px;margin:0 auto;padding:16px 24px 32px;font-size:11px;color:"
+    + (CFG ? "#A3A3A3" : "#EB0000") + ";font-family:inherit;";
+  d.innerHTML = t;
+  document.body.appendChild(d);
+}
+
+var F  = CFG ? CFG.FISCO : {};
+var SB_= CFG ? CFG.SABATINI : {};
+var FZ = CFG ? CFG.FINANZIARIE : {};
+function g(o,k,d){ return (o && o[k] !== undefined) ? o[k] : d; }
+
+var IVA     = g(F,"iva",0.22);
+var CAP_STD = g(F,"tettoAcquisto",18075.99);
+var CAP_AG  = g(F,"tettoAcquistoAgente",25822.84);
+var NOL_STD = g(F,"tettoNoleggio",3615.20);
+var NOL_AG  = g(F,"tettoNoleggioAgente",5164.57);
+var AMM     = g(F,"ammortamento",[0.125,0.25,0.25,0.25,0.125]);
+var CONTRIB_DIP = g(F,"contributiDipendente",0.0919);
+var SOGLIA_N1   = g(F,"sogliaFalsoAutocarro",180);
+var DUR_MIN_LEA = g(F,"leasingDurataMinimaMesi",48);
+var FRINGE  = {bev:g(F,"fringeBev",0.10), phev:g(F,"fringePhev",0.20), altro:g(F,"fringeAltro",0.50)};
+var KM_CONV = g(F,"fringeKmConvenzionali",15000);
+
+/* Campi stimati: si ricalcolano dal prezzo e dalla durata finche' il
+   consulente non li tocca. Al primo input il campo si blocca. */
+var TOCCATO = {canoneL:false, canoneN:false, gestione:false, residuo:false, interessi:false};
+var ANCORA = {prezzo:0, durata:0};
+var RESIDUO_STD = g(FZ,"residuo",{24:65, 36:52, 48:42, 60:33});
+
+function stimaGestione(prezzo){ return Math.round(Math.max(1200, Math.min(4200, prezzo*0.08))/100)*100; }
+function stimaResiduo(){ return RESIDUO_STD[Number(val("durata"))] || 42; }
+function stimaLeasing(prezzo, mesi, tan, riscattoPct, anticipo){
+  var r = tan/100/12, vr = prezzo*riscattoPct/100;
+  var d = Math.pow(1+r, -mesi);
+  return Math.max(0, Math.round((Math.max(0,prezzo-anticipo) - vr*d) * r / (1-d)));
+}
+function stimaNoleggio(prezzo, mesi, residuoPct, gestioneAnno, anticipo){
+  var anni = mesi/12;
+  var deprezzamento = prezzo*(1-residuoPct/100);
+  var finanziario = prezzo*0.055*anni*0.6;
+  var servizi = gestioneAnno*anni*0.75;
+  var totale = (deprezzamento + finanziario + servizi)*1.08;
+  return Math.max(0, Math.round((totale - anticipo)/mesi/10)*10);
+}
+function stimaInteressi(){
+  var C = Math.max(0, num("prezzo") - num("anticipo")), n = Number(val("durata")), r = (num("tan")||0)/100/12;
+  if(r<=0 || n<=0 || C<=0) return 0;
+  var rata = C*r/(1-Math.pow(1+r,-n));
+  return Math.round(rata*n - C);
+}
+function applicaStime(force){
+  var prezzo = num("prezzo"), mesi = Number(val("durata")), tan = num("tan") || 6.9;
+  if(force || !TOCCATO.residuo){ document.getElementById("residuo").value = stimaResiduo(); }
+  if(force || !TOCCATO.gestione){ document.getElementById("gestione").value = stimaGestione(prezzo); }
+  var ant = num("anticipo");
+  if(force || !TOCCATO.canoneL){ document.getElementById("canoneL").value = stimaLeasing(prezzo, mesi, tan, num("riscatto")||15, ant); }
+  if(force || !TOCCATO.canoneN){ document.getElementById("canoneN").value = stimaNoleggio(prezzo, mesi, num("residuo"), num("gestione"), ant); }
+  if(force || !TOCCATO.interessi){ document.getElementById("interessi").value = stimaInteressi(); }
+  if(force){ TOCCATO = {canoneL:false, canoneN:false, gestione:false, residuo:false, interessi:false}; }
+  ANCORA = {prezzo:prezzo, durata:mesi};
+  ["L","N","G","R","I"].forEach(function(k){
+    var map = {L:"canoneL", N:"canoneN", G:"gestione", R:"residuo", I:"interessi"};
+    var el = document.getElementById("st"+k);
+    if(el) el.style.display = TOCCATO[map[k]] ? "none" : "inline";
+  });
+}
+function eur(n){ return Number(n).toLocaleString("it-IT",{minimumFractionDigits:0,maximumFractionDigits:0})+" \u20ac"; }
+function pct(n){ return Math.round(n*100)+"%"; }
+function num(id){ return Number(document.getElementById(id).value)||0; }
+function val(id){ return document.getElementById(id).value; }
+
+/* ---------- test falso autocarro ---------- */
+function testN1(){
+  var quattro = val("quattro")==="si";
+  var portata = (num("mc")-num("tara"))/1000;
+  var rap = portata>0 ? num("kw")/portata : 0;
+  var falso = quattro && rap >= SOGLIA_N1;
+  return {portata:portata, rapporto:rap, falso:falso, quattro:quattro};
+}
+
+/* ---------- inquadramento ---------- */
+function inquadra(){
+  var cli = val("cli"), uso = val("uso"), cat = val("cat");
+  var n1vero = false, t = null;
+  if(cat==="n1"){ t = testN1(); n1vero = !t.falso; }
+
+  if(cli==="privato")
+    return {ded:0, cap:Infinity, capNol:Infinity, iva:0, eti:"Privato",
+      base:"Nessuna deduzione e nessuna detrazione: il cliente sostiene il costo pieno.", rif:"", fb:false, n1:t};
+  if(cli==="forfe")
+    return {ded:0, cap:Infinity, capNol:Infinity, iva:0, eti:"Regime forfettario",
+      base:"Il forfettario non deduce analiticamente n\u00e9 detrae l'IVA: i costi sono gi\u00e0 nel coefficiente di redditivit\u00e0.", rif:"L. 190/2014", fb:false, n1:t};
+  if(cli==="strum" || uso==="esclusivo")
+    return {ded:1, cap:Infinity, capNol:Infinity, iva:1, eti:"Uso esclusivamente strumentale",
+      base:"Veicolo strumentale nell'attivit\u00e0 propria: deduzione integrale e IVA interamente detraibile, senza tetti di costo.", rif:"art. 164 c.1 lett. a TUIR", fb:false, n1:t};
+  if(n1vero)
+    return {ded:1, cap:Infinity, capNol:Infinity, iva:1, eti:"Autocarro N1 genuino",
+      base:"L'N1 supera il test del 2006: resta autocarro a tutti gli effetti fiscali, deduzione e IVA al 100%.", rif:"Provv. AdE 184192/2006", fb:false, n1:t};
+  if(cli==="agente")
+    return {ded:0.8, cap:CAP_AG, capNol:NOL_AG, iva:1, eti:"Agente o rappresentante di commercio",
+      base:"Categoria agevolata: deduzione all'80% con tetto elevato e IVA interamente detraibile.", rif:"art. 164 c.1 lett. b TUIR", fb:false, n1:t};
+  if(uso==="dipendente")
+    return {ded:0.7, cap:Infinity, capNol:Infinity, iva:0.4, eti:"Uso promiscuo al dipendente",
+      base:"Assegnazione per almeno 183 giorni: deduzione al 70% senza tetto di costo. In cambio il dipendente sconta il fringe benefit.", rif:"art. 164 c.1 lett. b-bis TUIR", fb:true, n1:t};
+  var solo = (cli==="prof") ? " La deduzione spetta per un solo veicolo, uno per ciascun associato." : "";
+  return {ded:0.2, cap:CAP_STD, capNol:NOL_STD, iva:0.4, eti:(cli==="prof"?"Professionista":"Impresa")+", uso promiscuo",
+    base:"Caso residuale: deduzione al 20% entro i tetti di costo e IVA detraibile al 40%."+solo, rif:"art. 164 c.1 lett. b TUIR", fb:false, n1:t};
+}
+
+/* ---------- scenari di acquisizione ---------- */
+function scenari(R){
+  var prezzo = num("prezzo"), mesi = Number(val("durata")), anni = mesi/12;
+  var aliq = Number(val("aliq")), gest = num("gestione");
+  var ivaAcq = prezzo*IVA, ivaRec = ivaAcq*R.iva, ivaCosto = ivaAcq-ivaRec;
+  var out = [];
+
+  /* deduzione delle spese di gestione, comune a tutti gli scenari */
+  var ivaGest = gest*IVA, ivaGestRec = ivaGest*R.iva;
+  var dedGest = (gest + (ivaGest-ivaGestRec)) * R.ded * anni;
+
+  /* --- acquisto --- */
+  (function(){
+    var costoFisc = Math.min(prezzo + ivaCosto, R.cap);
+    var quota = 0, i;
+    for(i=0;i<Math.min(Math.ceil(anni),AMM.length);i++){
+      var frazione = Math.min(1, anni-i);
+      quota += costoFisc*AMM[i]*frazione;
+    }
+    var ded = quota*R.ded + dedGest;
+    out.push({k:"acquisto", lab:"Acquisto", esborso: prezzo+ivaAcq+gest*anni,
+      ivaRec: ivaRec+ivaGestRec*anni, ded: ded, risp: ded*aliq,
+      nota:"Il veicolo entra nel patrimonio: alla fine ha un valore residuo, qui non conteggiato."});
+  })();
+
+  /* --- finanziamento --- */
+  (function(){
+    var interessi = num("interessi");
+    var costoFisc = Math.min(prezzo + ivaCosto, R.cap);
+    var quota = 0, i;
+    for(i=0;i<Math.min(Math.ceil(anni),AMM.length);i++){
+      var frazione = Math.min(1, anni-i);
+      quota += costoFisc*AMM[i]*frazione;
+    }
+    var dedInt = (R.ded>0) ? interessi : 0;   /* art. 96, fuori dai limiti art. 164 */
+    var ded = quota*R.ded + dedGest + dedInt;
+    out.push({k:"finanziamento", lab:"Finanziamento", esborso: prezzo+ivaAcq+interessi+gest*anni,
+      ivaRec: ivaRec+ivaGestRec*anni, ded: ded, risp: ded*aliq,
+      nota:"Gli interessi seguono l'art. 96 TUIR e non i limiti dell'art. 164: qui sono dedotti per intero, da verificare sul ROL."});
+  })();
+
+  /* --- leasing --- */
+  (function(){
+    var canone = num("canoneL"), tot = canone*mesi + num("anticipo"), ivaL = tot*IVA;
+    var ivaLrec = ivaL*R.iva, ivaLcosto = ivaL-ivaLrec;
+    var prop = (R.cap===Infinity || prezzo<=R.cap) ? 1 : R.cap/prezzo;
+    var rilevante = (tot+ivaLcosto)*prop;
+    var ded = rilevante*R.ded + dedGest;
+    var breve = mesi < DUR_MIN_LEA && val("cat")==="m1";
+    out.push({k:"leasing", lab:"Leasing", esborso: tot+ivaL+gest*anni,
+      ivaRec: ivaLrec+ivaGestRec*anni, ded: ded, risp: ded*aliq,
+      warn: breve ? "Durata inferiore a 48 mesi: i canoni non sono fiscalmente riconosciuti come leasing." : null,
+      nota:"Il canone rileva solo per la quota proporzionale al tetto di costo. Il maxicanone \u00e8 incluso nel totale e ripartito sulla durata, come vuole l'art. 108 TUIR."});
+  })();
+
+  /* --- noleggio --- */
+  (function(){
+    var canone = num("canoneN"), qs = num("quotaServ")/100;
+    var totContratto = canone*mesi + num("anticipo");
+    var totAnno = totContratto/anni, locAnno = totAnno*(1-qs), servAnno = totAnno*qs;
+    var ivaN = totContratto*IVA, ivaNrec = ivaN*R.iva, ivaNcosto = ivaN-ivaNrec;
+    var locRil = Math.min(locAnno, R.capNol);
+    var ded = (locRil + servAnno)*R.ded*anni + dedGest*0.35 + (ivaNcosto*R.ded);
+    out.push({k:"noleggio", lab:"Noleggio a lungo termine", esborso: totContratto+ivaN+gest*anni*0.35,
+      ivaRec: ivaNrec+ivaGestRec*anni*0.35, ded: ded, risp: ded*aliq,
+      warn: (R.capNol!==Infinity && locAnno>R.capNol) ? "Quota locazione "+eur(locAnno)+"/anno oltre il tetto di "+eur(R.capNol)+": l'eccedenza non \u00e8 deducibile." : null,
+      nota:"Molte spese di gestione sono gi\u00e0 nel canone: qui il residuo \u00e8 stimato al 35%. La quota servizi non ha tetto in euro."});
+  })();
+
+  out.forEach(function(s){ s.netto = s.esborso - s.ivaRec - s.risp; });
+  return out;
+}
+
+/* ---------- Nuova Sabatini ----------
+   Contributo = interessi su piano convenzionale a 5 anni, 10 rate semestrali
+   costanti, su un importo pari al finanziamento. Tassi da FAQ MIMIT 2.1/7.1. */
+function sabatini(R){
+  var cli = val("cli"), prezzo = num("prezzo"), aliq = Number(val("aliq"));
+  var tasso = (val("linea")==="ord") ? g(SB_,"tassoOrdinario",0.0275) : g(SB_,"tassoGreen",0.03575);
+  var r = tasso/g(SB_,"ratePerAnno",2), n = g(SB_,"ratePerAnno",2)*g(SB_,"durataAnni",5);
+  var rata = prezzo * r / (1 - Math.pow(1+r, -n));
+  var contributo = rata*n - prezzo;
+
+  var ko = [];
+  if(cli==="privato") ko.push("Il cliente non \u00e8 un'impresa.");
+  if(cli==="prof" || cli==="forfe") ko.push("Professionisti e lavoratori autonomi non sono imprese iscritte al Registro Imprese: restano fuori dalla misura.");
+  if(val("dim")==="grande") ko.push("La misura \u00e8 riservata alle PMI.");
+  if(val("immatr")==="si") ko.push("Sono ammissibili solo veicoli nuovi di fabbrica non ancora immatricolati: km0, demo e import gi\u00e0 targati sono esclusi (FAQ 6.14).");
+  if(val("sost")==="si") ko.push("La mera sostituzione di un mezzo esistente non \u00e8 ammissibile (FAQ 6.3).");
+  if(val("ordine")==="si") ko.push("L'ordine \u00e8 gi\u00e0 stato confermato: il programma risulta avviato prima della domanda e il contributo non \u00e8 pi\u00f9 ottenibile.");
+
+  /* stesso provvedimento del falso autocarro: FAQ 6.3 */
+  var veicoloOk = false, motivoV = "";
+  if(cli==="strum" || val("uso")==="esclusivo"){
+    veicoloOk = true;
+    motivoV = "Veicolo strettamente correlato all'attivit\u00e0 economica agevolata: la FAQ 6.3 fa salvi questi casi.";
+  } else if(val("cat")==="n1"){
+    var t = testN1();
+    veicoloOk = !t.falso;
+    motivoV = t.falso
+      ? "L'N1 non supera il test del provvedimento 6 dicembre 2006: \u00e8 utilizzabile per il trasporto privato di persone e quindi escluso."
+      : "L'N1 supera il test del provvedimento 6 dicembre 2006: non \u00e8 utilizzabile per il trasporto privato di persone, quindi \u00e8 ammissibile.";
+  } else {
+    motivoV = "Un'autovettura M1 \u00e8 per definizione utilizzabile per il trasporto privato di persone: esclusa dalla misura.";
+  }
+  if(!veicoloOk) ko.push(motivoV);
+
+  var intensitaMax = (val("dim")==="media") ? g(SB_,"intensitaMedie",0.10) : g(SB_,"intensitaPiccole",0.20);
+  var intensita = contributo/prezzo;
+  var tagliato = intensita > intensitaMax;
+  var contributoAmm = tagliato ? prezzo*intensitaMax : contributo;
+
+  return {contributo:contributoAmm, lordo:contributo, tasso:tasso, ko:ko, ok:ko.length===0,
+          motivoV:motivoV, veicoloOk:veicoloOk, intensita:intensita, intensitaMax:intensitaMax,
+          tagliato:tagliato, netto:contributoAmm*(1-aliq)};
+}
+
+/* ---------- valore alla fine: patrimonio, opzione, rischi ---------- */
+function patrimonio(R, S){
+  var prezzo = num("prezzo"), mesi = Number(val("durata")), anni = mesi/12, aliq = Number(val("aliq"));
+  var mercato = prezzo * num("residuo")/100;
+  var riscatto = prezzo * num("riscatto")/100;
+
+  /* valore contabile residuo dopo l'ammortamento civilistico gia' maturato */
+  var maturato = 0, i;
+  for(i=0;i<Math.min(Math.ceil(anni),AMM.length);i++) maturato += AMM[i]*Math.min(1, anni-i);
+  maturato = Math.min(1, maturato);
+  var contabile = prezzo*(1-maturato);
+
+  /* art. 164 c.2: la plusvalenza rileva nella stessa proporzione dell'ammortamento dedotto */
+  var rilevanza = R.ded * ((R.cap===Infinity || prezzo<=R.cap) ? 1 : R.cap/prezzo);
+  var plus = Math.max(0, mercato - contabile);
+  var imposta = plus * rilevanza * aliq;
+
+  var rec = {};
+  rec.acquisto = mercato - imposta;
+  rec.finanziamento = mercato - imposta;
+
+  /* leasing: opzione di acquisto a prezzo fissato alla firma */
+  var ivaRis = riscatto*IVA, ivaRisNon = ivaRis*(1-R.iva);
+  rec.leasing = Math.max(0, mercato - riscatto - ivaRisNon);
+  rec.noleggio = 0;
+
+  S.forEach(function(x){ x.rec = rec[x.k]||0; x.rett = x.netto - x.rec; });
+  return {mercato:mercato, riscatto:riscatto, contabile:contabile, plus:plus,
+          imposta:imposta, rilevanza:rilevanza, opzione:rec.leasing, maturato:maturato};
+}
+
+/* ---------- fringe benefit ---------- */
+function fringe(){
+  var base = num("aci")*KM_CONV*FRINGE[val("alim")];
+  var noteFB = [];
+  if(val("eta")==="si"){ base *= g(F,"fringeMaggiorazioneOltre5Anni",1.5); noteFB.push("Maggiorazione del 50% per veicolo oltre i cinque anni dalla prima immatricolazione (D.Lgs. 148/2026)."); }
+  if(val("optional")==="si"){ base *= g(F,"fringeMaggiorazioneOptional",1.05); noteFB.push("Maggiorazione forfettaria del 5% per optional a carico dell'azienda non presenti in tabella ACI."); }
+  var tratt = num("trattenuta")*12;
+  var imponibile = Math.max(0, base - tratt);
+  var costoDip = imponibile*(Number(val("aliqDip"))+CONTRIB_DIP);
+  return {base:base, imponibile:imponibile, costoDip:costoDip, note:noteFB, tratt:tratt};
+}
+
+function qrow(lab,a,b,c,d){
+  return '<tr><td>'+lab+'</td><td>'+a+'</td><td>'+b+'</td><td>'+c+'</td><td>'+d+'</td></tr>';
+}
+
+/* ---------- rendering ---------- */
+function render(){
+  var cli = val("cli"), cat = val("cat"), uso = val("uso");
+
+  document.getElementById("boxN1").className = (cat==="n1") ? "card" : "card hidden";
+  document.getElementById("testEsteso").className = (val("quattro")==="si") ? "form" : "form hidden";
+  document.getElementById("hCat").textContent = (cat==="n1")
+    ? "L'N1 da solo non basta: rispondi alla domanda qui sotto."
+    : "Tetti di costo dell'art. 164 e IVA al 40%.";
+  document.getElementById("hCli").textContent = ({
+    privato:"Nessun recupero fiscale: il confronto si gioca solo sul costo e sulla rata.",
+    prof:"20% entro 18.075,99 \u20ac, per un solo veicolo. Fuori dalla Sabatini.",
+    forfe:"Nessuna deduzione, nessuna IVA, fuori dalla Sabatini.",
+    impresa:"Deduzione al 20% entro 18.075,99 \u20ac, salvo assegnazione a dipendente.",
+    ditta:"Stesse regole dell'impresa.",
+    agente:"80% con tetto 25.822,84 \u20ac e IVA al 100%.",
+    strum:"100% senza tetti, IVA al 100%, ammesso alla Sabatini."})[cli];
+  document.getElementById("hUso").textContent = ({
+    promiscuo:"\u00c8 il caso pi\u00f9 comune: tetti di costo e IVA al 40%.",
+    dipendente:"Almeno 183 giorni. Deduzione al 70% senza tetto, ma il dipendente paga il fringe benefit.",
+    esclusivo:"Serve poterlo dimostrare: l'onere della prova \u00e8 del cliente."})[uso];
+  document.getElementById("hDur").textContent = (val("cat")==="m1" && Number(val("durata"))<48)
+    ? "Sotto i 48 mesi il leasing non \u00e8 fiscalmente riconosciuto come tale."
+    : "Per il leasing auto la durata minima riconosciuta \u00e8 48 mesi.";
+
+  /* esito test N1 */
+  if(cat==="n1"){
+    var t = testN1();
+    var box = document.getElementById("esitoN1");
+    if(!t.quattro){
+      box.innerHTML = '<div class="alert"><div class="h">Autocarro genuino</div><p>Non ricorrono tutte e quattro le condizioni del provvedimento: il veicolo resta autocarro a ogni effetto fiscale. <b>Deduzione 100%, IVA 100%, nessun tetto di costo.</b></p></div>';
+    } else {
+      var esito = t.falso
+        ? '<div class="alert"><div class="h">Falso autocarro</div><p>Portata '+t.portata.toFixed(3).replace(".",",")+' t, rapporto potenza/portata <b>'+t.rapporto.toFixed(1).replace(".",",")+'</b>, pari o superiore a 180. Ricorrono tutte e quattro le condizioni: il veicolo <b>&egrave; assimilato ad autovettura</b>. Deduzione 20% con i tetti, IVA 40%, bollo da autovettura.</p></div>'
+        : '<div class="alert"><div class="h">Autocarro genuino</div><p>Portata '+t.portata.toFixed(3).replace(".",",")+' t, rapporto potenza/portata <b>'+t.rapporto.toFixed(1).replace(".",",")+'</b>, sotto la soglia di 180. Il veicolo <b>resta autocarro</b>: deduzione 100%, IVA 100%, nessun tetto.</p></div>';
+      box.innerHTML = esito;
+    }
+  }
+
+  var R = inquadra();
+  var mostraFB = R.fb;
+  document.getElementById("boxFB").className = mostraFB ? "pan" : "pan hidden";
+  document.getElementById("panSab").className = (cli==="privato"||cli==="prof"||cli==="forfe") ? "pan hidden" : "pan";
+
+  var S = scenari(R);
+  var best = S.reduce(function(a,s){ return (a===null || s.netto<a.netto) ? s : a; }, null);
+  var worst = S.reduce(function(a,s){ return (a===null || s.netto>a.netto) ? s : a; }, null);
+
+  var h = '<div class="card">';
+  h += '<div class="chead"><div class="kb">Inquadramento</div><div class="t">'+R.eti+'</div>'
+     + '<div class="s">'+R.base+(R.rif?' &middot; '+R.rif:'')+'</div></div>';
+  h += '<div class="kpis">'
+     + '<div class="kpi"><div class="lb">Deducibilit&agrave;</div><div class="vl">'+pct(R.ded)+'</div><div class="nt">'
+       +(R.cap===Infinity?"Nessun tetto di costo":"Tetto "+eur(R.cap)+" su acquisto e leasing")+'</div></div>'
+     + '<div class="kpi"><div class="lb">IVA detraibile</div><div class="vl">'+pct(R.iva)+'</div><div class="nt">'
+       +(R.iva===0?"Nessun recupero IVA":"L'IVA non detratta si somma al costo deducibile")+'</div></div>'
+     + '<div class="kpi"><div class="lb">Tetto noleggio</div><div class="vl">'
+       +(R.capNol===Infinity?"&mdash;":eur(R.capNol))+'</div><div class="nt">'
+       +(R.capNol===Infinity?"Nessun tetto annuo sui canoni":"All'anno, sulla sola quota di locazione")+'</div></div>'
+     + '</div>';
+
+  h += '<div class="tscroll"><table><thead><tr><th>Forma</th><th>Esborso lordo</th><th>IVA recuperata</th>'
+     + '<th>Deduzione</th><th>Risparmio d\'imposta</th><th>Costo netto</th></tr></thead><tbody>';
+  S.forEach(function(s){
+    h += '<tr'+(s===best?' class="tot"':'')+'><td>'+s.lab+(s===best?' <span class="pill">Migliore</span>':'')+'</td>'
+       + '<td>'+eur(s.esborso)+'</td><td>'+eur(s.ivaRec)+'</td><td>'+eur(s.ded)+'</td>'
+       + '<td>'+eur(s.risp)+'</td><td>'+eur(s.netto)+'</td></tr>';
+  });
+  h += '</tbody></table></div>';
+
+  var delta = worst.netto-best.netto;
+  h += '<div class="verdict"><b>'+(R.ded===0
+      ? "Nessun recupero fiscale: la scelta si gioca solo su rata, servizi e valore residuo."
+      : "Su "+Number(val("durata"))+" mesi la forma pi\u00f9 efficiente \u00e8 "+best.lab.toLowerCase()+", "+eur(delta)+" in meno rispetto a "+worst.lab.toLowerCase()+".")
+     + '</b><span>'+(R.ded===0
+      ? "Con questo profilo il vantaggio fiscale non esiste: non usarlo come argomento."
+      : "Recupero complessivo su "+best.lab.toLowerCase()+": "+eur(best.ivaRec+best.risp)+" fra IVA detratta e minori imposte.")+'</span></div>';
+
+  var warns = S.filter(function(s){ return s.warn; });
+  if(warns.length){
+    h += '<div class="alert"><div class="h">Attenzione</div><p>'
+       + warns.map(function(s){ return "<b>"+s.lab+".</b> "+s.warn; }).join("<br>") + '</p></div>';
+  }
+
+  h += '<div class="notes"><div class="h">Come leggere la tabella</div><ul>'
+     + '<li><b>Esborso lordo</b>: quanto esce di cassa nel periodo, IVA compresa, incluse le spese di gestione stimate.</li>'
+     + '<li><b>Costo netto</b>: esborso meno IVA recuperata meno risparmio d\'imposta. \u00c8 il numero da confrontare.</li>'
+     + '<li>Sull\'acquisto e sul finanziamento <b>il valore residuo del veicolo non \u00e8 conteggiato</b>: a parit\u00e0 di costo netto, chi compra si ritrova un bene, chi noleggia no. \u00c8 la voce che ribalta pi\u00f9 spesso il confronto.</li>'
+     + S.map(function(s){ return '<li><b>'+s.lab+'.</b> '+s.nota+'</li>'; }).join("")
+     + '</ul></div></div>';
+
+  document.getElementById("out").innerHTML = h;
+
+  /* ---- riepiloghi dei pannelli richiudibili ---- */
+  var stale = (ANCORA.prezzo !== num("prezzo") || ANCORA.durata !== Number(val("durata")))
+              && Object.keys(TOCCATO).some(function(k){ return TOCCATO[k]; });
+  document.getElementById("smEco").innerHTML = (stale
+    ? "<b style='color:var(--amica-red)'>valori bloccati su un prezzo o una durata diversi</b> &middot; "
+    : "") +
+    "TAN "+num("tan").toFixed(1).replace(".",",")+"% &middot; leasing "+eur(num("canoneL"))+"/mese &middot; noleggio "+eur(num("canoneN"))+"/mese &middot; gestione "+eur(num("gestione"))+"/anno";
+  document.getElementById("smFin").innerHTML =
+    "residuo "+num("residuo")+"% ("+eur(num("prezzo")*num("residuo")/100)+") &middot; riscatto "+num("riscatto")+"% &middot; "+(val("principi")==="ifrs"?"IFRS 16":"OIC");
+
+  /* ---- Nuova Sabatini ---- */
+  var SB = sabatini(R);
+  document.getElementById("hLinea").textContent = (val("linea")==="green")
+    ? "Servono certificazione ambientale di processo oppure certificazioni di prodotto per ogni bene (FAQ 6.B.2)."
+    : (val("linea")==="quattro")
+      ? "Richiede tutte le caratteristiche degli allegati 6/A e 6/B: raramente applicabile a un veicolo."
+      : "Linea base, nessuna certificazione richiesta.";
+
+  var sb = '<div class="card"><div class="chead"><div class="kb">Contributo in conto impianti</div>'
+    + '<div class="t">Nuova Sabatini</div>'
+    + '<div class="s">DM 22 aprile 2022 e circolare 410823 del 6 dicembre 2022 &middot; richiede finanziamento bancario o leasing finanziario</div></div>';
+
+  if(SB.ok){
+    sb += '<div class="kpis">'
+      + '<div class="kpi"><div class="lb">Contributo</div><div class="vl">'+eur(SB.contributo)+'</div>'
+        +'<div class="nt">Interessi su piano convenzionale 5 anni al '+(SB.tasso*100).toFixed(3).replace(".",",")+'%</div></div>'
+      + '<div class="kpi"><div class="lb">Beneficio netto d\'imposta</div><div class="vl">'+eur(SB.netto)+'</div>'
+        +'<div class="nt">Il contributo in conto impianti concorre a formare il reddito</div></div>'
+      + '<div class="kpi"><div class="lb">Intensit&agrave; di aiuto</div><div class="vl">'+(SB.intensita*100).toFixed(1).replace(".",",")+'%</div>'
+        +'<div class="nt">Massimo '+pct(SB.intensitaMax)+' per questa dimensione d\'impresa</div></div>'
+      + '</div>';
+    if(SB.tagliato){
+      sb += '<div class="alert"><div class="h">Contributo ridotto</div><p>Il calcolo teorico darebbe '+eur(SB.lordo)
+         + ', pari al '+(SB.intensita*100).toFixed(1).replace(".",",")+'% dell\'investimento, oltre il tetto di intensit\u00e0 del '
+         + pct(SB.intensitaMax)+'. Il contributo concedibile scende a '+eur(SB.contributo)+'.</p></div>';
+    }
+    var fin = S.filter(function(x){ return x.k==="finanziamento" || x.k==="leasing"; });
+    sb += '<div class="tscroll"><table><thead><tr><th>Forma ammessa alla misura</th><th>Costo netto rettificato</th>'
+       + '<th>Contributo netto</th><th>Con Sabatini</th></tr></thead><tbody>';
+    fin.forEach(function(x){
+      sb += '<tr><td>'+x.lab+'</td><td>'+eur(x.rett)+'</td><td>'+eur(SB.netto)+'</td><td><b>'+eur(x.rett-SB.netto)+'</b></td></tr>';
+    });
+    sb += '</tbody></table></div>';
+    sb += '<div class="verdict"><b>Il cliente ha diritto a '+eur(SB.contributo)+' di contributo, '+eur(SB.netto)+' netti d\'imposta.</b>'
+       + '<span>Si somma al recupero fiscale gi\u00e0 calcolato e non \u00e8 in de minimis: \u00e8 un aiuto in esenzione GBER, cumulabile con altre misure nei limiti di intensit\u00e0.</span></div>';
+    sb += '<div class="alert"><div class="h">La sequenza prevista dalla norma</div><p>'
+       + '<b>1.</b> Domanda via PEC alla banca o alla societ\u00e0 di leasing. <b>2.</b> Solo dopo, conferma d\'ordine. <b>3.</b> Stipula del finanziamento. <b>4.</b> Consegna entro 12 mesi. '
+       + 'Il programma si considera avviato alla prima fra conferma d\'ordine, fattura e pagamento anche in acconto: <b>una conferma d\'ordine anteriore alla domanda preclude il contributo in modo definitivo</b>. '
+       + 'Le fatture devono riportare il CUP e la dicitura &ldquo;art. 2, c. 4, D.L. n. 69/2013&rdquo;: senza, la quota corrispondente viene revocata.</p></div>';
+  } else {
+    sb += '<div class="alert"><div class="h">Non accessibile con questo profilo</div><p>'
+       + SB.ko.map(function(k){ return "&bull; "+k; }).join("<br>") + '</p></div>';
+    if(!SB.veicoloOk && val("cat")==="m1"){
+      sb += '<div class="notes"><div class="h">Nota</div><ul>'
+        + '<li>La Sabatini usa <b>lo stesso provvedimento del 6 dicembre 2006</b> del test sul falso autocarro. Un solo requisito tecnico decide due cose insieme: deducibilit\u00e0 al 100% con IVA al 100%, e accesso al contributo.</li>'
+        + '<li>Su una PMI, un <b>veicolo commerciale genuino</b> al posto di un\'autovettura cambia il conto due volte: deducibilit\u00e0 e accesso al contributo.</li>'
+        + '<li>Ammissibili anche le <b>infrastrutture di ricarica</b> per veicoli elettrici, se dentro un programma organico (FAQ 6.6): la wallbox pu\u00f2 entrare nello stesso investimento.</li>'
+        + '</ul></div>';
+    }
+  }
+  sb += '<div class="notes"><div class="h">Condizioni che restano vere in ogni caso</div><ul>'
+    + '<li>Serve un <b>finanziamento bancario o un leasing finanziario</b>: l\'acquisto in contanti e il noleggio a lungo termine sono fuori dalla misura. Il lease-back non \u00e8 ammesso.</li>'
+    + '<li>Durata massima 5 anni compreso il preammortamento, finanziamento fino al 100% dell\'investimento, massimo 4 milioni per impresa. <b>L\'IVA non \u00e8 ammissibile</b>: il contributo si calcola sull\'imponibile.</li>'
+    + '<li>I beni non possono essere alienati o distratti dall\'uso produttivo <b>per tre anni</b> dall\'ultimazione dell\'investimento.</li>'
+    + '<li>Lo sportello \u00e8 aperto fino a esaurimento risorse. Prima di costruirci sopra una campagna, <b>verificare la capienza sul sito MIMIT</b>: nel 2026 pi\u00f9 di una misura per veicoli commerciali si \u00e8 esaurita in un giorno.</li>'
+    + '</ul></div></div>';
+  document.getElementById("outSab").innerHTML = sb;
+  document.getElementById("smSab").innerHTML = SB.ok
+    ? "ammissibile &middot; contributo "+eur(SB.contributo)+" ("+eur(SB.netto)+" netti)"
+    : "non accessibile &middot; "+SB.ko.length+(SB.ko.length===1?" blocco":" blocchi");
+
+  /* ---- oltre il costo netto ---- */
+  var P = patrimonio(R, S);
+  var bestR = S.reduce(function(a,x){ return (a===null || x.rett<a.rett) ? x : a; }, null);
+  var ifrs = val("principi")==="ifrs";
+  document.getElementById("hRes").textContent = ({24:"Riferimento indicativo a 24 mesi: intorno al 65%.",
+    36:"Riferimento indicativo a 36 mesi: intorno al 52%.",48:"Riferimento indicativo a 48 mesi: intorno al 42%.",
+    60:"Riferimento indicativo a 60 mesi: intorno al 33%."})[Number(val("durata"))] + " Da tarare su Quattroruote o Eurotax.";
+  document.getElementById("hPrin").textContent = ifrs
+    ? "Con IFRS 16 anche il noleggio finisce a bilancio come diritto d'uso con il debito corrispondente."
+    : "Con gli OIC il bene in leasing NON entra nell'attivo: i canoni sono costi in B8.";
+
+  var p = '<div class="card">';
+  p += '<div class="chead"><div class="kb">Oltre il costo netto</div><div class="t">Che cosa resta in mano al cliente</div>'
+     + '<div class="s">Valore di mercato stimato a fine periodo '+eur(P.mercato)+' &middot; riscatto leasing '+eur(P.riscatto)+'</div></div>';
+
+  p += '<div class="tscroll"><table><thead><tr><th>Forma</th><th>Costo netto</th>'
+     + '<th>Valore recuperabile</th><th>Costo netto rettificato</th></tr></thead><tbody>';
+  S.forEach(function(x){
+    p += '<tr'+(x===bestR?' class="tot"':'')+'><td>'+x.lab+(x===bestR?' <span class="pill">Migliore</span>':'')+'</td>'
+       + '<td>'+eur(x.netto)+'</td><td>'+(x.rec>0?eur(x.rec):'&mdash;')+'</td><td>'+eur(x.rett)+'</td></tr>';
+  });
+  p += '</tbody></table></div>';
+
+  var giro = (best!==bestR);
+  p += '<div class="verdict"><b>'+(giro
+      ? "Contando quel che resta alla fine il verdetto cambia: non "+best.lab.toLowerCase()+" ma "+bestR.lab.toLowerCase()+"."
+      : "Anche contando quel che resta alla fine la forma migliore resta "+bestR.lab.toLowerCase()+".")
+     + '</b><span>'+(giro
+      ? "\u00c8 il caso pi\u00f9 frequente: il costo netto da solo premia sempre il noleggio, perch\u00e9 ignora che alla fine non lascia nulla."
+      : "Il vantaggio regge anche sul valore residuo, quindi \u00e8 un argomento solido.")+'</span></div>';
+
+  p += '<div class="notes"><div class="h">Che cosa distingue davvero le formule</div><ul>'
+     + '<li><b>Il leasing non patrimonializza durante il contratto.</b> Con i principi OIC vale il metodo patrimoniale: il bene resta nell\'attivo del concedente, il cliente iscrive i canoni fra i costi per godimento beni di terzi (voce B8) e riporta gli effetti del metodo finanziario solo in nota integrativa, art. 2427 n. 22 c.c. Le societ\u00e0 in bilancio abbreviato e le micro imprese sono esonerate anche da quella. Il bene entra nell\'attivo <b>solo al riscatto</b>, e al prezzo di riscatto, non al valore di mercato.</li>'
+     + '<li><b>Il vero vantaggio del leasing \u00e8 un\'opzione, non un patrimonio.</b> Alla firma si fissa il prezzo di riscatto; a fine contratto il cliente decide. Qui l\'opzione vale '+eur(P.opzione)+': valore di mercato '+eur(P.mercato)+' meno riscatto '+eur(P.riscatto)+'. Se il mercato scende sotto il riscatto, semplicemente non si esercita: il rischio al ribasso \u00e8 limitato.</li>'
+     + '<li><b>La plusvalenza da rivendita \u00e8 tassata in proporzione.</b> Art. 164 c.2 TUIR: rileva nella stessa proporzione fra ammortamento dedotto e ammortamento complessivo. Con questo profilo la quota rilevante \u00e8 '+pct(P.rilevanza)+', quindi su una plusvalenza di '+eur(P.plus)+' l\'imposta \u00e8 '+eur(P.imposta)+'. Sulle auto a deducibilit\u00e0 ridotta questa asimmetria lavora a favore del cliente.</li>'
+     + '<li><b>Il valore residuo \u00e8 una stima, non un dato.</b> Dipende da marchio, chilometraggio, alimentazione e stato del mercato dell\'usato fra tre o quattro anni. Sui BEV oggi \u00e8 la variabile pi\u00f9 incerta di tutto il calcolo: se il cliente \u00e8 avverso al rischio, quel rischio nel noleggio lo porta il noleggiatore.</li>'
+     + '</ul></div>';
+
+  p += '<div class="tscroll"><table><thead><tr><th>Dimensione</th><th>Acquisto</th><th>Finanziamento</th><th>Leasing</th><th>Noleggio</th></tr></thead><tbody>'
+     + qrow("Bene nell'attivo durante il contratto", "S\u00ec, immobilizzazione", "S\u00ec, immobilizzazione",
+            ifrs?"S\u00ec, diritto d'uso":"No, solo al riscatto", ifrs?"S\u00ec, diritto d'uso":"No, mai")
+     + qrow("Debito nel passivo", "No", "S\u00ec, per intero",
+            ifrs?"S\u00ec":"No, solo nota integrativa", ifrs?"S\u00ec":"No")
+     + qrow("Effetto sugli indici di indebitamento", "Nessuno", "Peggiora il leverage",
+            ifrs?"Peggiora il leverage":"Neutro a bilancio", ifrs?"Peggiora il leverage":"Neutro")
+     + qrow("Assorbe affidamento bancario", "No, esce cassa", "S\u00ec", "S\u00ec", "Di norma no")
+     + qrow("Visibile in Centrale Rischi", "No", "S\u00ec", "S\u00ec", "Di norma no")
+     + qrow("Chi porta il rischio sul valore residuo", "Il cliente", "Il cliente", "Il cliente, ma con opzione", "Il noleggiatore")
+     + qrow("Chi porta il rischio manutenzione e imprevisti", "Il cliente", "Il cliente", "Il cliente", "Il noleggiatore")
+     + qrow("Che cosa resta alla scadenza", "Il veicolo", "Il veicolo", "L'opzione di riscatto", "Nulla")
+     + qrow("Uscita anticipata", "Rivendita", "Estinzione anticipata", "Risoluzione onerosa", "Penali di contratto")
+     + qrow("Impegno di cassa iniziale", "Massimo", "Anticipo", "Maxicanone", "Minimo o nullo")
+     + '</tbody></table></div>';
+
+  p += '<div class="alert"><div class="h">Attenzione al confronto sbagliato</div><p>'
+     + (ifrs
+        ? "Con IFRS 16 la distinzione fra leasing e noleggio a bilancio <b>sparisce</b>: entrambi generano un diritto d'uso e un debito. L'argomento \u201cil noleggio non appesantisce il bilancio\u201d con questo cliente non regge e non va usato."
+        : "L'argomento \u201cil leasing patrimonializza\u201d \u00e8 il pi\u00f9 diffuso e il pi\u00f9 sbagliato: con gli OIC, durante il contratto, leasing e noleggio finiscono <b>entrambi</b> a conto economico come costi per godimento beni di terzi. La differenza sta alla fine, nell'opzione di riscatto, non durante.")
+     + '</p></div>';
+
+  p += '</div>';
+  document.getElementById("outPatr").innerHTML = p;
+
+  if(mostraFB){
+    var F = fringe();
+    var f = '<div class="card"><div class="chead"><div class="kb">Effetto in busta paga</div>'
+      + '<div class="t">Fringe benefit annuo</div>'
+      + '<div class="s">Costo chilometrico ACI per 15.000 km convenzionali, art. 51 c.4 lett. a TUIR</div></div>'
+      + '<div class="kpis">'
+      + '<div class="kpi"><div class="lb">Valore forfettario</div><div class="vl">'+eur(F.base)+'</div><div class="nt">'
+        +({bev:"10% &middot; elettrica",phev:"20% &middot; plug-in",altro:"50% &middot; termica o ibrida non ricaricabile"})[val("alim")]+'</div></div>'
+      + '<div class="kpi"><div class="lb">Imponibile</div><div class="vl">'+eur(F.imponibile)+'</div><div class="nt">'
+        +(F.tratt>0?"Al netto di "+eur(F.tratt)+" di trattenute":"Nessuna trattenuta al dipendente")+'</div></div>'
+      + '<div class="kpi"><div class="lb">Costo per il dipendente</div><div class="vl">'+eur(F.costoDip)+'</div><div class="nt">IRPEF pi&ugrave; contributi al 9,19%</div></div>'
+      + '</div>';
+    var fnotes = F.note.slice();
+    fnotes.push("Se il fringe benefit viene fatturato mensilmente con IVA, la detrazione sale dal 40% al 100%: \u00e8 la leva pi\u00f9 sottovalutata di questo schema.");
+    fnotes.push("Soglie di esenzione dei fringe benefit complessivi: 1.000 \u20ac, 2.000 \u20ac con figli a carico. Superate anche di un euro si tassa l'intero importo, non l'eccedenza.");
+    if(val("alim")!=="bev"){
+      var bev = num("aci")*KM_CONV*FRINGE.bev*(val("eta")==="si"?g(F,"fringeMaggiorazioneOltre5Anni",1.5):1)*(val("optional")==="si"?g(F,"fringeMaggiorazioneOptional",1.05):1);
+      fnotes.push("A parit\u00e0 di costo ACI, una elettrica porterebbe l'imponibile a "+eur(bev)+": "+eur(F.base-bev)+" in meno all'anno per il dipendente.");
+    }
+    f += '<div class="notes"><div class="h">Elementi rilevanti</div><ul>'+fnotes.map(function(n){return "<li>"+n+"</li>";}).join("")+'</ul></div></div>';
+    document.getElementById("outFB").innerHTML = f;
+    document.getElementById("smFB").innerHTML =
+      ({bev:"elettrica 10%",phev:"plug-in 20%",altro:"termica 50%"})[val("alim")]
+      +" &middot; imponibile "+eur(F.imponibile)+"/anno &middot; costa "+eur(F.costoDip)+" al dipendente";
+  }
+}
+
+/* i campi stimati si bloccano appena il consulente li tocca */
+["canoneL","canoneN","gestione","residuo","interessi"].forEach(function(id){
+  var el = document.getElementById(id);
+  if(el) el.addEventListener("input", function(){ TOCCATO[id] = true; });
+});
+/* prezzo, durata, TAN e riscatto rigenerano le stime non ancora bloccate */
+["prezzo","durata","tan","riscatto","anticipo"].forEach(function(id){
+  var el = document.getElementById(id);
+  if(el) el.addEventListener("input", function(){ applicaStime(false); });
+});
+document.getElementById("btnReset").addEventListener("click", function(){ applicaStime(true); render(); });
+
+["cli","uso","aliq","cat","prezzo","durata","tan","anticipo","interessi","canoneL","canoneN","quotaServ","gestione",
+ "quattro","kw","mc","tara","alim","aci","eta","optional","trattenuta","aliqDip",
+ "residuo","riscatto","principi","dim","linea","immatr","sost","ordine"].forEach(function(id){
+  var el = document.getElementById(id);
+  if(el) el.addEventListener("input", render);
+});
+
+/* i default delle finanziarie arrivano dai parametri */
+if(CFG){
+  document.getElementById("tan").value = g(FZ,"tanDefault",6.9);
+  document.getElementById("riscatto").value = g(FZ,"riscattoLeasingPct",15);
+  document.getElementById("quotaServ").value = g(FZ,"quotaServiziNoleggioPct",30);
+}
+applicaStime(true);
+render();
+piedeVersione();
+</script>
+</body>
+</html>
