@@ -5,6 +5,7 @@ concessionaria multimarca con sedi a Caserta, Capua, Teverola, Casoria e Napoli.
 Si usano in salone, davanti al cliente, su tablet o desktop.
 
 Sito statico puro: HTML, CSS e JavaScript senza dipendenze, senza build, senza framework.
+Nessuna chiamata a servizi terzi: font e loghi dei mandati stanno in `assets/`.
 Pubblicato su Cloudflare Pages collegato a questo repository: ogni commit ripubblica da solo.
 
 ---
@@ -18,6 +19,7 @@ Pubblicato su Cloudflare Pages collegato a questo repository: ogni commit ripubb
 | `simulatore-fiscale.html` | **02** Inquadramento fiscale, confronto delle quattro formule al netto del recupero, Nuova Sabatini, valore residuo, fringe benefit |
 | `costi-esercizio.html` | **03** Costo di alimentazione per motorizzazione, sui km e sul percorso reali |
 | `parametri.js` | **Norme, prezzi e gamma.** Vedi sotto |
+| `assets/` | Font Montserrat e loghi dei mandati, serviti dal repository |
 | `LEGGIMI.md` | Istruzioni di pubblicazione e manutenzione |
 
 ---
@@ -150,22 +152,16 @@ Numeri in formato italiano, separatore migliaia `.` e decimale `,`.
 
 ## Aperti
 
-1. **Font non self-hostato.** Montserrat arriva da Google Fonts. Il design system chiede
-   il self-hosting. La regola `@font-face` è già scritta e punta a
-   `assets/fonts/montserrat-variable-latin.woff2`: appena il file c'è, va rimosso il
-   `<link>` a Google Fonts da tutte e quattro le pagine.
-2. **Loghi dei costruttori dal CDN.** Le schede modello caricano i loghi dei mandati da
-   `cdnwp.dealerk.com`. Per l'uso offline vanno copiati in `assets/logo/marchi/`.
-3. **Accesso ancora aperto.** Cloudflare Access con Google Workspace non è ancora
+1. **Accesso ancora aperto.** Cloudflare Access con Google Workspace non è ancora
    configurato: finché non lo è, l'indirizzo è pubblico. Vanno coperti anche i
    sottodomini di anteprima.
-4. **Plug-in hybrid con dati parziali.** Autonomia e batteria di Jaecoo 8 e Lepas L8 sono
+2. **Plug-in hybrid con dati parziali.** Autonomia e batteria di Jaecoo 8 e Lepas L8 sono
    reali; il **consumo a batteria scarica è stimato** (6,0 e 6,5 l/100 km) e sul Tonale è
    stimato tutto.
-5. **Valore residuo stimato.** Le percentuali per durata (65/52/42/33) sono riferimenti di
+3. **Valore residuo stimato.** Le percentuali per durata (65/52/42/33) sono riferimenti di
    mercato, non curve Eurotax né residui contrattuali AMICA.
-6. **Strumenti 04 e 05 da costruire**: scheda offerta stampabile per il cliente e
-   valutazione permuta.
+4. **Strumento 04 da costruire**: scheda offerta stampabile per il cliente. La
+   valutazione permuta, ipotizzata come strumento 05, è stata scartata.
 
 ---
 
