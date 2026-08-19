@@ -344,6 +344,11 @@ svg{width:100%;height:auto;display:block;}
   .printlogo{display:block;padding:var(--space-4) var(--space-5) 0;}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none !important;}}
+
+/* Marchio al posto della parola AMICA nel testo. Altezza legata alla cap height
+   di Montserrat (0,70em), cosi' il logo copre esattamente lo spazio verticale di
+   una maiuscola e si appoggia alla linea di base come le lettere accanto. */
+.mk-amica{height:.70em;width:auto;vertical-align:baseline;display:inline-block}
 </style>
 </head>
 <body>
@@ -409,7 +414,7 @@ svg{width:100%;height:auto;display:block;}
     </div>
   </div>
 
-  <div class="sect"><h2>I modelli della gamma AMICA</h2><div class="rule"></div></div>
+  <div class="sect"><h2>I modelli della gamma <img class="mk-amica" src="assets/logo/amica-wordmark.png" alt="AMICA"></h2><div class="rule"></div></div>
   <div class="filters" id="filters"></div>
   <div class="grid" id="grid"></div>
 
@@ -432,7 +437,7 @@ svg{width:100%;height:auto;display:block;}
 
 <div class="network">
   <div class="in">
-    <h2>La rete AMICA</h2>
+    <h2>La rete <img class="mk-amica" src="assets/logo/amica-wordmark-bianco.png" alt="AMICA"></h2>
     <div class="sedi">
       <div class="sede"><b>Caserta</b><span>Viale Carlo III, 20 &middot; 81100<br>Sede legale e amministrativa<br>Fiat, Abarth, Jeep, Lancia, Alfa Romeo, MG, INEOS, MAXUS, Fiat Professional</span></div>
       <div class="sede"><b>Capua</b><span>Via S.S. Appia km 199, 200 &middot; 81043<br>Fiat, Peugeot, Citro&euml;n, MG<br>Fiat, Peugeot e Citro&euml;n Professional</span></div>
@@ -446,7 +451,7 @@ svg{width:100%;height:auto;display:block;}
     </div>
     <p class="netfoot">
       In ogni sede trovi l'intero portafoglio marchi del gruppo, non solo i mandati indicati qui sopra.<br>
-      <b>AMICA PRO</b> per i veicoli commerciali &middot; <b>Valore Amica</b>, fino a 8 anni di garanzia &middot;
+      <b><img class="mk-amica" src="assets/logo/amica-wordmark-bianco.png" alt="AMICA"> PRO</b> per i veicoli commerciali &middot; <b>Valore Amica</b>, fino a 8 anni di garanzia &middot;
       Agenzia assicurativa <b>Generali</b> per furto, incendio e rapina.
     </p>
     <p class="netfoot rent">
@@ -455,7 +460,7 @@ svg{width:100%;height:auto;display:block;}
     </p>
     <p class="netfoot contatti">
       <a href="tel:00390823224252">0823 224252</a><span class="sep">&middot;</span><a href="mailto:servizioclienti@gruppopalmesano.it">servizioclienti@gruppopalmesano.it</a><span class="sep">&middot;</span><a href="https://www.gruppopalmesano.it" target="_blank" rel="noopener">gruppopalmesano.it</a><span class="sep">&middot;</span><a href="https://www.amicarent.com" target="_blank" rel="noopener">amicarent.com</a>
-      <br>AMICA &amp; C. S.R.L. &middot; Partita IVA 01630600623
+      <br><img class="mk-amica" src="assets/logo/amica-wordmark-bianco.png" alt="AMICA"> &amp; C. S.R.L. &middot; Partita IVA 01630600623
     </p>
   </div>
 </div>
@@ -468,7 +473,7 @@ svg{width:100%;height:auto;display:block;}
 var CFG = (typeof AMICA_PARAMETRI !== "undefined") ? AMICA_PARAMETRI : null;
 function piedeVersione(){
   var t = CFG
-    ? "Kit consulente AMICA &middot; parametri versione "+CFG.VERSIONE+" &middot; aggiornati il "+CFG.AGGIORNATO
+    ? "Kit consulente <img class='mk-amica' src='assets/logo/amica-wordmark.png' alt='AMICA'> &middot; parametri versione "+CFG.VERSIONE+" &middot; aggiornati il "+CFG.AGGIORNATO
       + (CFG.NOTA ? " &middot; "+CFG.NOTA : "")
     : "<b>Parametri non caricati</b>: la pagina sta usando i valori interni di ripiego. Verificare che parametri.js sia presente accanto al file.";
   var d = document.createElement("div");

@@ -93,6 +93,11 @@ h1 em{font-style:normal;color:var(--amica-red);}
 @media(max-width:768px){.network .in{padding:0 var(--space-4);}}
 .network p{margin:0;font-size:var(--size-xs);color:var(--gray-400);line-height:var(--leading-normal);}
 .network b{color:var(--amica-white);font-weight:700;}
+
+/* Marchio al posto della parola AMICA nel testo. Altezza legata alla cap height
+   di Montserrat (0,70em), cosi' il logo copre esattamente lo spazio verticale di
+   una maiuscola e si appoggia alla linea di base come le lettere accanto. */
+.mk-amica{height:.70em;width:auto;vertical-align:baseline;display:inline-block}
 </style>
 </head>
 <body>
@@ -107,7 +112,7 @@ h1 em{font-style:normal;color:var(--amica-red);}
 <div class="wrap">
   <div class="hero">
     <p class="kicker">Strumenti di supporto alla consulenza</p>
-    <h1>Kit consulente<br><em>AMICA</em></h1>
+    <h1>Kit consulente<br><em><img class="mk-amica" src="assets/logo/amica-wordmark.png" alt="AMICA"></em></h1>
     <p class="lead">Due strumenti da usare accanto al cliente, in salone o su tablet.
        Rispondono alle due domande che il cliente pone sempre e a cui si risponde peggio:
        quanto mi costa muoverla, e come mi conviene prenderla.</p>
@@ -198,7 +203,7 @@ h1 em{font-style:normal;color:var(--amica-red);}
     <h3>Perimetro e limiti</h3>
     <ul>
       <li><b>Materiale interno.</b> Non &egrave; predisposto per l&rsquo;invio al cliente, per la pubblicazione o per la stampa su carta intestata come parere.</li>
-      <li><b>AMICA non &egrave; un intermediario fiscale.</b> I calcoli del simulatore sono ordini di grandezza: la posizione del singolo cliente resta di competenza del suo commercialista.</li>
+      <li><b><img class="mk-amica" src="assets/logo/amica-wordmark.png" alt="AMICA"> non &egrave; un intermediario fiscale.</b> I calcoli del simulatore sono ordini di grandezza: la posizione del singolo cliente resta di competenza del suo commercialista.</li>
       <li><b>I dati marcati &ldquo;dato da confermare&rdquo;</b> non sono ancora stati riscontrati sui listini ufficiali dei mandati.</li>
       <li><b>La normativa fiscale cambia di continuo.</b> I parametri sono aggiornati al 18 agosto 2026 e vanno riallineati a ogni legge di bilancio.</li>
     </ul>
@@ -207,7 +212,7 @@ h1 em{font-style:normal;color:var(--amica-red);}
 
 <div class="network">
   <div class="in">
-    <p><b>AMICA &amp; C. S.R.L.</b> &middot; Gruppo Palmesano &middot; Caserta, Capua, Teverola, Casoria, Napoli &middot; Partita IVA 01630600623<br>
+    <p><b><img class="mk-amica" src="assets/logo/amica-wordmark-bianco.png" alt="AMICA"> &amp; C. S.R.L.</b> &middot; Gruppo Palmesano &middot; Caserta, Capua, Teverola, Casoria, Napoli &middot; Partita IVA 01630600623<br>
     Strumenti aggiornati al 18 agosto 2026. Parametri fiscali verificati alla stessa data.</p>
   </div>
 </div>
@@ -217,7 +222,7 @@ h1 em{font-style:normal;color:var(--amica-red);}
 var CFG = (typeof AMICA_PARAMETRI !== "undefined") ? AMICA_PARAMETRI : null;
 function piedeVersione(){
   var t = CFG
-    ? "Kit consulente AMICA &middot; parametri versione "+CFG.VERSIONE+" &middot; aggiornati il "+CFG.AGGIORNATO
+    ? "Kit consulente <img class='mk-amica' src='assets/logo/amica-wordmark.png' alt='AMICA'> &middot; parametri versione "+CFG.VERSIONE+" &middot; aggiornati il "+CFG.AGGIORNATO
       + (CFG.NOTA ? " &middot; "+CFG.NOTA : "")
     : "<b>Parametri non caricati</b>: la pagina sta usando i valori interni di ripiego. Verificare che parametri.js sia presente accanto al file.";
   var d = document.createElement("div");

@@ -194,6 +194,11 @@ details.pan .body{padding:0 var(--space-5) var(--space-5);border-top:1px solid v
 .essenziali{background:var(--surface-subtle);border-radius:var(--radius-md);padding:var(--space-5);}
 @media print{.form,.masthead a.back{display:none !important;} .card{box-shadow:none;border:1px solid var(--gray-400);}}
 @media (prefers-reduced-motion:reduce){*{transition:none !important;}}
+
+/* Marchio al posto della parola AMICA nel testo. Altezza legata alla cap height
+   di Montserrat (0,70em), cosi' il logo copre esattamente lo spazio verticale di
+   una maiuscola e si appoggia alla linea di base come le lettere accanto. */
+.mk-amica{height:.70em;width:auto;vertical-align:baseline;display:inline-block}
 </style>
 </head>
 <body>
@@ -388,7 +393,7 @@ details.pan .body{padding:0 var(--space-5) var(--space-5);border-top:1px solid v
 
   <div class="disclaimer">
     <div class="h">Perimetro dello strumento</div>
-    <p><b>Questo non &egrave; un parere fiscale e AMICA non &egrave; un intermediario fiscale.</b> Lo strumento produce un ordine di grandezza. La posizione del singolo cliente dipende da reddito, regime contabile, ROL, pro-rata IVA, presenza di altri veicoli e da circostanze che il simulatore non conosce: resta di competenza del suo commercialista.</p>
+    <p><b>Questo non &egrave; un parere fiscale e <img class="mk-amica" src="assets/logo/amica-wordmark-bianco.png" alt="AMICA"> non &egrave; un intermediario fiscale.</b> Lo strumento produce un ordine di grandezza. La posizione del singolo cliente dipende da reddito, regime contabile, ROL, pro-rata IVA, presenza di altri veicoli e da circostanze che il simulatore non conosce: resta di competenza del suo commercialista.</p>
     <p>I valori prodotti non hanno natura di calcolo definitivo e il documento non &egrave; predisposto per essere consegnato come parere su carta intestata.</p>
     <p>La materia cambia di continuo: il D.Lgs. 148/2026 era in vigore da sei giorni al momento di questa versione. I parametri sono aggiornati al 18 agosto 2026 e vanno riallineati a ogni legge di bilancio.</p>
   </div>
@@ -416,7 +421,7 @@ document.getElementById("amicaLogo").src = LOGO_W;
 var CFG = (typeof AMICA_PARAMETRI !== "undefined") ? AMICA_PARAMETRI : null;
 function piedeVersione(){
   var t = CFG
-    ? "Kit consulente AMICA &middot; parametri versione "+CFG.VERSIONE+" &middot; aggiornati il "+CFG.AGGIORNATO
+    ? "Kit consulente <img class='mk-amica' src='assets/logo/amica-wordmark.png' alt='AMICA'> &middot; parametri versione "+CFG.VERSIONE+" &middot; aggiornati il "+CFG.AGGIORNATO
       + (CFG.NOTA ? " &middot; "+CFG.NOTA : "")
     : "<b>Parametri non caricati</b>: la pagina sta usando i valori interni di ripiego. Verificare che parametri.js sia presente accanto al file.";
   var d = document.createElement("div");
