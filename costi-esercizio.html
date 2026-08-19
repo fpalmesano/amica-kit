@@ -37,7 +37,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AMICA &middot; Quanto costa davvero la tua prossima auto</title>
 <script src="parametri.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 @font-face{
   font-family:"Montserrat";
@@ -485,8 +484,9 @@ var P_HOME = g(E,"energiaCasa",0.229433);
 var P_FAST = g(E,"energiaPubblicaDC",0.79);
 var P_BENZ = g(E,"benzina",1.992);
 
-/* asset ufficiali AMICA, stessi file pubblicati su gruppopalmesano.it */
-var CDN = "https://cdnwp.dealerk.com/a474819f/uploads/sites/10/";
+/* Loghi dei mandati, stessi file pubblicati su gruppopalmesano.it, copiati nel
+   repository il 19/08/2026: in salone lo strumento non dipende piu' dal CDN. */
+var CDN = "assets/logo/marchi/";
 /* Loghi ufficiali del design system, incorporati in base64: il file e'
    autoconsistente e funziona offline. Sorgenti (§6.1):
      amica-logo-stacked-white.png  1134x505  -> negativo, fondi scuri e di marca
@@ -502,18 +502,18 @@ var LOGHI = {
   ext:    ".svg"
 };
 var MARCHI = {
-  "Fiat":       CDN + "2018/05/sizem-48px-modepositive-0x68.png",
-  "Lancia":     CDN + "2018/05/sizem-48px-modepositive-1-0x68.png",
-  "Alfa Romeo": CDN + "2018/05/e14d434b21d4bfe686b9279f318f3527-0x68.png",
-  "Abarth":     CDN + "2018/05/sizem-48px-modepositive-3-0x68.png",
-  "Mazda":      CDN + "2025/10/Dealer-Mazda.svg",
-  "MG":         CDN + "2021/11/sizem-48px-modepositive-5-0x68.png",
-  "Jeep":       CDN + "2018/07/jeep-7.svg",
-  "Citro\u00ebn":  CDN + "2024/07/sizem-48px-modepositive-6-0x68.png",
-  "Peugeot":    CDN + "2024/07/makelogo-0x68.png",
-  "Omoda":      CDN + "2024/12/omoda-seeklogo-0x68.png",
-  "Jaecoo":     CDN + "2025/04/Risorsa-12.svg",
-  "MAXUS":      CDN + "2025/04/Risorsa-11.svg"
+  "Fiat":       CDN + "fiat.png",
+  "Lancia":     CDN + "lancia.png",
+  "Alfa Romeo": CDN + "alfa-romeo.png",
+  "Abarth":     CDN + "abarth.png",
+  "Mazda":      CDN + "mazda.svg",
+  "MG":         CDN + "mg.png",
+  "Jeep":       CDN + "jeep.svg",
+  "Citro\u00ebn":  CDN + "citroen.png",
+  "Peugeot":    CDN + "peugeot.png",
+  "Omoda":      CDN + "omoda.png",
+  "Jaecoo":     CDN + "jaecoo.svg",
+  "MAXUS":      CDN + "maxus.svg"
 };
 
 /* ---------------------------------------------------------------------------
