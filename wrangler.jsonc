@@ -1,0 +1,13 @@
+{
+  // Configurazione per la pubblicazione su Cloudflare Workers.
+  // Il kit e' fatto di soli file statici: non c'e' codice da eseguire sul server,
+  // quindi manca il campo "main" e c'e' solo "assets".
+  // Il campo "name" deve coincidere con il nome del progetto scelto nella
+  // dashboard Cloudflare, altrimenti la build si ferma.
+  "name": "amica-kit",
+  "compatibility_date": "2026-08-19",
+  "assets": {
+    "directory": "./",
+    "not_found_handling": "404-page"
+  }
+}
