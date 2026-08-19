@@ -6,7 +6,17 @@ Si usano in salone, davanti al cliente, su tablet o desktop.
 
 Sito statico puro: HTML, CSS e JavaScript senza dipendenze, senza build, senza framework.
 Nessuna chiamata a servizi terzi: font e loghi dei mandati stanno in `assets/`.
-Pubblicato su Cloudflare Pages collegato a questo repository: ogni commit ripubblica da solo.
+
+Pubblicato su **Cloudflare Workers** come sito di soli asset statici, all'indirizzo
+`https://amica-kit.f-palmesano.workers.dev`. Il repository e' collegato con Workers
+Builds: ogni commit su `main` ripubblica da solo, senza comando di build. La
+configurazione sta in `wrangler.jsonc`, e il campo `name` deve restare identico al
+nome del progetto sulla dashboard Cloudflare, altrimenti la build fallisce.
+
+L'accesso e' chiuso con Cloudflare Access su tutto il traffico: si entra con una
+email `@gruppopalmesano.it` e un codice usa e getta ricevuto per posta. Se i filtri
+antispam aziendali aprono i link in anticipo bruciano il codice, quindi
+`noreply@notify.cloudflare.com` va tenuto in allowlist.
 
 ---
 
@@ -152,9 +162,9 @@ Numeri in formato italiano, separatore migliaia `.` e decimale `,`.
 
 ## Aperti
 
-1. **Accesso ancora aperto.** Cloudflare Access con Google Workspace non è ancora
-   configurato: finché non lo è, l'indirizzo è pubblico. Vanno coperti anche i
-   sottodomini di anteprima.
+1. **Posti Zero Trust contati.** Il piano gratuito si ferma a 50 utenti ed e' un muro:
+   il 51esimo che prova a entrare viene bloccato. In gruppo si e' in 105, quindi il
+   perimetro va tenuto sulla rete vendita e sui primi livelli.
 2. **Plug-in hybrid con dati parziali.** Autonomia e batteria di Jaecoo 8 e Lepas L8 sono
    reali; il **consumo a batteria scarica è stimato** (6,0 e 6,5 l/100 km) e sul Tonale è
    stimato tutto.
